@@ -1,0 +1,1171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ShopEase — Product Management</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        * { font-family: 'Inter', sans-serif; }
+        .page { display: none; }
+        .page.active { display: block; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .toast {
+            position: fixed; bottom: 24px; right: 24px;
+            padding: 12px 20px; border-radius: 8px;
+            font-size: 14px; font-weight: 500;
+            z-index: 9999; animation: slideIn 0.3s ease;
+            max-width: 320px;
+        }
+        @keyframes slideIn {
+            from { transform: translateX(100px); opacity: 0; }
+            to   { transform: translateX(0);     opacity: 1; }
+        }
+        .badge {
+            display: inline-flex; align-items: center;
+            padding: 2px 10px; border-radius: 9999px;
+            font-size: 11px; font-weight: 600;
+            text-transform: uppercase; letter-spacing: 0.05em;
+        }
+        .spinner {
+            border: 2px solid #e5e7eb;
+            border-top-color: #3b82f6;
+            border-radius: 50%; width: 16px; height: 16px;
+            animation: spin 0.6s linear infinite; display: inline-block;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .card { transition: box-shadow 0.15s ease, transform 0.15s ease; }
+        .card:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.08); transform: translateY(-1px); }
+        .btn { transition: all 0.15s ease; }
+        .btn:active { transform: scale(0.97); }
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
+        }
+        .nav-tab {
+            padding: 8px 16px; border-radius: 6px;
+            cursor: pointer; font-size: 14px; font-weight: 500;
+            transition: all 0.15s ease; color: #6b7280;
+        }
+        .nav-tab.active { background: #eff6ff; color: #2563eb; }
+        .nav-tab:hover:not(.active) { background: #f9fafb; color: #374151; }
+        .status-PENDING  { background:#fef9c3; color:#854d0e; }
+        .status-CONFIRMED{ background:#dcfce7; color:#166534; }
+        .status-SHIPPED  { background:#dbeafe; color:#1e40af; }
+        .status-DELIVERED{ background:#f0fdf4; color:#15803d; }
+        .status-CANCELLED{ background:#fee2e2; color:#991b1b; }
+        .qty-btn {
+            width: 28px; height: 28px; border-radius: 6px;
+            border: 1px solid #e5e7eb; background: white;
+            cursor: pointer; font-size: 16px; font-weight: 500;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.15s ease;
+        }
+        .qty-btn:hover { background: #f3f4f6; }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+
+<!-- ═══════════════════════════════════════════════════════
+     AUTH PAGES
+══════════════════════════════════════════════════════════ -->
+<div id="authPage" class="page active min-h-screen flex items-center justify-center p-4">
+    <div class="w-full max-w-md">
+
+        <!-- Logo -->
+        <div class="text-center mb-8">
+            <div class="inline-flex items-center gap-2 mb-2">
+                <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
+                    </svg>
+                </div>
+                <span class="text-xl font-700 text-gray-900 font-bold">ShopEase</span>
+            </div>
+            <p class="text-gray-500 text-sm">Product Management & Order Processing</p>
+        </div>
+
+        <!-- Auth Card -->
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+
+            <!-- Tabs -->
+            <div class="flex border-b border-gray-100">
+                <button onclick="switchAuth('login')" id="loginTab"
+                        class="flex-1 py-4 text-sm font-600 font-semibold text-blue-600
+                           border-b-2 border-blue-600 transition-all">
+                    Sign In
+                </button>
+                <button onclick="switchAuth('register')" id="registerTab"
+                        class="flex-1 py-4 text-sm font-semibold text-gray-400
+                           border-b-2 border-transparent transition-all">
+                    Create Account
+                </button>
+            </div>
+
+            <!-- Login Form -->
+            <div id="loginForm" class="p-6">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-500 uppercase
+                                      tracking-wider mb-1.5">Email</label>
+                        <input id="loginEmail" type="email" placeholder="you@example.com"
+                               class="w-full px-3 py-2.5 border border-gray-200 rounded-lg
+                                   text-sm transition-all"/>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-500 uppercase
+                                      tracking-wider mb-1.5">Password</label>
+                        <input id="loginPassword" type="password" placeholder="••••••••"
+                               class="w-full px-3 py-2.5 border border-gray-200 rounded-lg
+                                   text-sm transition-all"/>
+                    </div>
+                    <button onclick="login()" id="loginBtn"
+                            class="btn w-full bg-blue-600 hover:bg-blue-700 text-white py-2.5
+                               rounded-lg text-sm font-semibold mt-2">
+                        Sign In
+                    </button>
+                </div>
+                <p id="loginError" class="text-red-500 text-xs mt-3 text-center hidden"></p>
+            </div>
+
+            <!-- Register Form -->
+            <div id="registerForm" class="p-6 hidden">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-500 uppercase
+                                      tracking-wider mb-1.5">Full Name</label>
+                        <input id="regName" type="text" placeholder="Advait Bothe"
+                               class="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm"/>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-500 uppercase
+                                      tracking-wider mb-1.5">Email</label>
+                        <input id="regEmail" type="email" placeholder="you@example.com"
+                               class="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm"/>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-500 uppercase
+                                      tracking-wider mb-1.5">Password</label>
+                        <input id="regPassword" type="password" placeholder="••••••••"
+                               class="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm"/>
+                    </div>
+                    <button onclick="register()" id="registerBtn"
+                            class="btn w-full bg-blue-600 hover:bg-blue-700 text-white py-2.5
+                               rounded-lg text-sm font-semibold mt-2">
+                        Create Account
+                    </button>
+                </div>
+                <p id="regError" class="text-red-500 text-xs mt-3 text-center hidden"></p>
+            </div>
+        </div>
+
+        <p class="text-center text-xs text-gray-400 mt-4">
+            Admin/SuperAdmin accounts must be set up via database
+        </p>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     USER DASHBOARD
+══════════════════════════════════════════════════════════ -->
+<div id="userPage" class="page min-h-screen">
+
+    <!-- Header -->
+    <header class="bg-white border-b border-gray-100 sticky top-0 z-40">
+        <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <div class="w-7 h-7 bg-blue-600 rounded-lg flex items-center justify-center">
+                    <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
+                    </svg>
+                </div>
+                <span class="font-bold text-gray-900">ShopEase</span>
+            </div>
+
+            <!-- Nav tabs -->
+            <nav class="hidden md:flex items-center gap-1">
+                <div class="nav-tab active" onclick="switchTab('products')">Products</div>
+                <div class="nav-tab" onclick="switchTab('cart')">
+                    Cart
+                    <span id="cartBadge" class="ml-1 bg-blue-600 text-white text-xs
+                                                  rounded-full px-1.5 py-0 hidden"></span>
+                </div>
+                <div class="nav-tab" onclick="switchTab('orders')">Orders</div>
+                <div class="nav-tab" onclick="switchTab('addresses')">Addresses</div>
+            </nav>
+
+            <div class="flex items-center gap-3">
+                <span id="userGreeting" class="text-sm text-gray-600 hidden md:block"></span>
+                <button onclick="logout()"
+                        class="btn text-xs font-medium text-gray-500 hover:text-red-500
+                           px-3 py-1.5 rounded-lg hover:bg-red-50 transition-all">
+                    Sign out
+                </button>
+            </div>
+        </div>
+
+        <!-- Mobile nav -->
+        <div class="md:hidden flex border-t border-gray-100 overflow-x-auto">
+            <div class="nav-tab active text-xs py-2 px-3" onclick="switchTab('products')">Products</div>
+            <div class="nav-tab text-xs py-2 px-3" onclick="switchTab('cart')">Cart</div>
+            <div class="nav-tab text-xs py-2 px-3" onclick="switchTab('orders')">Orders</div>
+            <div class="nav-tab text-xs py-2 px-3" onclick="switchTab('addresses')">Addresses</div>
+        </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto px-4 py-6">
+
+        <!-- PRODUCTS TAB -->
+        <div id="tab-products" class="tab-content active">
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <h1 class="text-xl font-bold text-gray-900">Browse Products</h1>
+                    <p class="text-sm text-gray-500 mt-0.5">Find what you need</p>
+                </div>
+                <div class="flex gap-2">
+                    <input id="searchInput" type="text" placeholder="Search products..."
+                           class="px-3 py-2 border border-gray-200 rounded-lg text-sm w-48"
+                           oninput="searchProducts()"/>
+                    <select id="categoryFilter" onchange="filterByCategory()"
+                            class="px-3 py-2 border border-gray-200 rounded-lg text-sm">
+                        <option value="">All Categories</option>
+                    </select>
+                </div>
+            </div>
+            <div id="productGrid"
+                 class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            </div>
+        </div>
+
+        <!-- CART TAB -->
+        <div id="tab-cart" class="tab-content">
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <h1 class="text-xl font-bold text-gray-900">Your Cart</h1>
+                    <p class="text-sm text-gray-500 mt-0.5">Review before checkout</p>
+                </div>
+                <button onclick="clearCart()"
+                        class="btn text-xs text-red-500 hover:bg-red-50 px-3 py-1.5
+                           rounded-lg transition-all font-medium">
+                    Clear cart
+                </button>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="lg:col-span-2">
+                    <div id="cartItems"></div>
+                </div>
+                <div>
+                    <!-- Order summary -->
+                    <div class="bg-white border border-gray-100 rounded-xl p-5 sticky top-24">
+                        <h3 class="font-semibold text-gray-900 mb-4">Order Summary</h3>
+                        <div class="space-y-2 text-sm text-gray-600 mb-4">
+                            <div class="flex justify-between">
+                                <span>Items</span>
+                                <span id="cartTotalItems">0</span>
+                            </div>
+                            <div class="flex justify-between font-semibold text-gray-900
+                                        border-t border-gray-100 pt-2">
+                                <span>Total</span>
+                                <span id="cartTotal">₹0.00</span>
+                            </div>
+                        </div>
+
+                        <!-- Address selector -->
+                        <select id="checkoutAddress"
+                                class="w-full px-3 py-2 border border-gray-200 rounded-lg
+                                   text-sm mb-3">
+                            <option value="">Select delivery address</option>
+                        </select>
+
+                        <button onclick="checkout()"
+                                class="btn w-full bg-blue-600 hover:bg-blue-700 text-white
+                                   py-2.5 rounded-lg text-sm font-semibold">
+                            Place Order
+                        </button>
+
+                        <p class="text-xs text-gray-400 text-center mt-3">
+                            Inventory validated before payment
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ORDERS TAB -->
+        <div id="tab-orders" class="tab-content">
+            <div class="mb-6">
+                <h1 class="text-xl font-bold text-gray-900">My Orders</h1>
+                <p class="text-sm text-gray-500 mt-0.5">Track your purchases</p>
+            </div>
+            <div id="ordersList" class="space-y-4"></div>
+        </div>
+
+        <!-- ADDRESSES TAB -->
+        <div id="tab-addresses" class="tab-content">
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <h1 class="text-xl font-bold text-gray-900">Delivery Addresses</h1>
+                    <p class="text-sm text-gray-500 mt-0.5">Manage saved addresses</p>
+                </div>
+                <button onclick="showAddressForm()"
+                        class="btn bg-blue-600 hover:bg-blue-700 text-white px-4 py-2
+                           rounded-lg text-sm font-semibold">
+                    + Add Address
+                </button>
+            </div>
+
+            <!-- Add address form -->
+            <div id="addressFormCard" class="hidden bg-white border border-gray-100
+                                              rounded-xl p-5 mb-5">
+                <h3 class="font-semibold text-gray-900 mb-4">New Address</h3>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div class="sm:col-span-2">
+                        <input id="addrStreet" placeholder="Street address"
+                               class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"/>
+                    </div>
+                    <input id="addrCity" placeholder="City"
+                           class="px-3 py-2 border border-gray-200 rounded-lg text-sm"/>
+                    <input id="addrState" placeholder="State"
+                           class="px-3 py-2 border border-gray-200 rounded-lg text-sm"/>
+                    <input id="addrPincode" placeholder="Pincode"
+                           class="px-3 py-2 border border-gray-200 rounded-lg text-sm"/>
+                    <input id="addrCountry" placeholder="Country" value="India"
+                           class="px-3 py-2 border border-gray-200 rounded-lg text-sm"/>
+                    <div class="sm:col-span-2 flex items-center gap-2">
+                        <input id="addrDefault" type="checkbox" class="rounded"/>
+                        <label class="text-sm text-gray-600">Set as default address</label>
+                    </div>
+                </div>
+                <div class="flex gap-2 mt-4">
+                    <button onclick="saveAddress()"
+                            class="btn bg-blue-600 hover:bg-blue-700 text-white px-4 py-2
+                               rounded-lg text-sm font-semibold">
+                        Save Address
+                    </button>
+                    <button onclick="hideAddressForm()"
+                            class="btn bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2
+                               rounded-lg text-sm font-medium">
+                        Cancel
+                    </button>
+                </div>
+            </div>
+
+            <div id="addressList" class="grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
+        </div>
+
+    </main>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     ADMIN DASHBOARD
+══════════════════════════════════════════════════════════ -->
+<div id="adminPage" class="page min-h-screen">
+    <header class="bg-white border-b border-gray-100 sticky top-0 z-40">
+        <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <div class="w-7 h-7 bg-violet-600 rounded-lg flex items-center
+                            justify-center">
+                    <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor"
+                         viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                              stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955
+                            11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02
+                            12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332
+                            9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                    </svg>
+                </div>
+                <span class="font-bold text-gray-900">ShopEase
+                    <span class="text-xs font-normal text-violet-600 ml-1">Admin</span>
+                </span>
+            </div>
+
+            <nav class="hidden md:flex items-center gap-1">
+                <div class="nav-tab active" onclick="switchAdminTab('adminProducts')">
+                    Products
+                </div>
+                <div class="nav-tab" onclick="switchAdminTab('adminOrders')">
+                    All Orders
+                </div>
+            </nav>
+
+            <div class="flex items-center gap-3">
+                <span id="adminGreeting" class="text-sm text-gray-600 hidden md:block"></span>
+                <button onclick="logout()"
+                        class="btn text-xs font-medium text-gray-500 hover:text-red-500
+                           px-3 py-1.5 rounded-lg hover:bg-red-50 transition-all">
+                    Sign out
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto px-4 py-6">
+
+        <!-- ADMIN PRODUCTS -->
+        <div id="tab-adminProducts" class="tab-content active">
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <h1 class="text-xl font-bold text-gray-900">Product Management</h1>
+                    <p class="text-sm text-gray-500 mt-0.5">Add, update, and manage inventory</p>
+                </div>
+                <button onclick="showAddProductForm()"
+                        class="btn bg-violet-600 hover:bg-violet-700 text-white px-4 py-2
+                           rounded-lg text-sm font-semibold">
+                    + Add Product
+                </button>
+            </div>
+
+            <!-- Add product form -->
+            <div id="addProductForm" class="hidden bg-white border border-gray-100
+                                             rounded-xl p-5 mb-5">
+                <h3 class="font-semibold text-gray-900 mb-4">New Product</h3>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div class="sm:col-span-2">
+                        <input id="pName" placeholder="Product name"
+                               class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"/>
+                    </div>
+                    <div class="sm:col-span-2">
+                        <textarea id="pDesc" placeholder="Description" rows="2"
+                                  class="w-full px-3 py-2 border border-gray-200 rounded-lg
+                                   text-sm resize-none"></textarea>
+                    </div>
+                    <input id="pPrice" type="number" placeholder="Price (₹)"
+                           class="px-3 py-2 border border-gray-200 rounded-lg text-sm"/>
+                    <input id="pQty" type="number" placeholder="Initial quantity"
+                           class="px-3 py-2 border border-gray-200 rounded-lg text-sm"/>
+                    <select id="pCategory"
+                            class="sm:col-span-2 px-3 py-2 border border-gray-200
+                               rounded-lg text-sm">
+                        <option value="">Select category</option>
+                    </select>
+                </div>
+                <div class="flex gap-2 mt-4">
+                    <button onclick="createProduct()"
+                            class="btn bg-violet-600 hover:bg-violet-700 text-white px-4 py-2
+                               rounded-lg text-sm font-semibold">
+                        Create Product
+                    </button>
+                    <button onclick="hideAddProductForm()"
+                            class="btn bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2
+                               rounded-lg text-sm font-medium">
+                        Cancel
+                    </button>
+                </div>
+            </div>
+
+            <div id="adminProductList" class="space-y-3"></div>
+        </div>
+
+        <!-- ADMIN ORDERS -->
+        <div id="tab-adminOrders" class="tab-content">
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <h1 class="text-xl font-bold text-gray-900">All Orders</h1>
+                    <p class="text-sm text-gray-500 mt-0.5">View and manage customer orders</p>
+                </div>
+                <select id="orderStatusFilter" onchange="filterOrders()"
+                        class="px-3 py-2 border border-gray-200 rounded-lg text-sm">
+                    <option value="">All Status</option>
+                    <option>PENDING</option>
+                    <option>CONFIRMED</option>
+                    <option>SHIPPED</option>
+                    <option>DELIVERED</option>
+                    <option>CANCELLED</option>
+                </select>
+            </div>
+            <div id="adminOrdersList" class="space-y-4"></div>
+        </div>
+
+    </main>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     JAVASCRIPT
+══════════════════════════════════════════════════════════ -->
+<script>
+    // const BASE = 'http://localhost:8080';
+    const BASE = 'http://127.0.0.1:5500/index.html';
+    let token = localStorage.getItem('token');
+    let role  = localStorage.getItem('role');
+    let userName = localStorage.getItem('userName');
+    let searchTimer;
+
+    // ── Utilities ──────────────────────────────────────────────────────────────
+
+    function api(endpoint, options = {}) {
+        return fetch(BASE + endpoint, {
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...(token ? { 'Authorization': 'Bearer ' + token } : {}),
+                ...(options.headers || {})
+            }
+        });
+    }
+
+    function toast(msg, type = 'success') {
+        const el = document.createElement('div');
+        el.className = 'toast ' + (type === 'success'
+            ? 'bg-gray-900 text-white'
+            : 'bg-red-500 text-white');
+        el.textContent = msg;
+        document.body.appendChild(el);
+        setTimeout(() => el.remove(), 3000);
+    }
+
+    function fmt(amount) {
+        return '₹' + Number(amount).toLocaleString('en-IN', {
+            minimumFractionDigits: 2, maximumFractionDigits: 2
+        });
+    }
+
+    function showPage(id) {
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+    }
+
+    function switchTab(name) {
+        document.querySelectorAll('#userPage .tab-content')
+            .forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('#userPage .nav-tab')
+            .forEach(t => t.classList.remove('active'));
+        document.getElementById('tab-' + name).classList.add('active');
+        document.querySelectorAll('#userPage .nav-tab').forEach(t => {
+            if (t.textContent.trim().toLowerCase().startsWith(name.toLowerCase())) {
+                t.classList.add('active');
+            }
+        });
+
+        if (name === 'cart')      { loadCart(); loadAddressesForCheckout(); }
+        if (name === 'orders')    loadMyOrders();
+        if (name === 'addresses') loadAddresses();
+    }
+
+    function switchAdminTab(name) {
+        document.querySelectorAll('#adminPage .tab-content')
+            .forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('#adminPage .nav-tab')
+            .forEach(t => t.classList.remove('active'));
+        document.getElementById('tab-' + name).classList.add('active');
+
+        if (name === 'adminProducts') loadAdminProducts();
+        if (name === 'adminOrders')   loadAdminOrders();
+    }
+
+    function switchAuth(mode) {
+        const isLogin = mode === 'login';
+        document.getElementById('loginForm').classList.toggle('hidden', !isLogin);
+        document.getElementById('registerForm').classList.toggle('hidden', isLogin);
+        document.getElementById('loginTab').className =
+            'flex-1 py-4 text-sm font-semibold transition-all ' +
+            (isLogin ? 'text-blue-600 border-b-2 border-blue-600'
+                     : 'text-gray-400 border-b-2 border-transparent');
+        document.getElementById('registerTab').className =
+            'flex-1 py-4 text-sm font-semibold transition-all ' +
+            (!isLogin ? 'text-blue-600 border-b-2 border-blue-600'
+                      : 'text-gray-400 border-b-2 border-transparent');
+    }
+
+    // ── Auth ───────────────────────────────────────────────────────────────────
+
+    async function login() {
+        const email    = document.getElementById('loginEmail').value.trim();
+        const password = document.getElementById('loginPassword').value;
+        const errEl    = document.getElementById('loginError');
+        errEl.classList.add('hidden');
+
+        if (!email || !password) { errEl.textContent='Fill in all fields'; errEl.classList.remove('hidden'); return; }
+
+        try {
+            const res  = await api('/api/auth/login', { method:'POST', body: JSON.stringify({ email, password }) });
+            const data = await res.json();
+
+            if (!res.ok) {
+                errEl.textContent = data.message || 'Invalid credentials';
+                errEl.classList.remove('hidden'); return;
+            }
+
+            token    = data.token;
+            role     = data.role;
+            userName = data.name || email.split('@')[0];
+            localStorage.setItem('token', token);
+            localStorage.setItem('role', role);
+            localStorage.setItem('userName', userName);
+
+            initDashboard();
+        } catch (e) {
+            errEl.textContent = 'Cannot connect to server. Is the backend running?';
+            errEl.classList.remove('hidden');
+        }
+    }
+
+    async function register() {
+        const name     = document.getElementById('regName').value.trim();
+        const email    = document.getElementById('regEmail').value.trim();
+        const password = document.getElementById('regPassword').value;
+        const errEl    = document.getElementById('regError');
+        errEl.classList.add('hidden');
+
+        if (!name || !email || !password) {
+            errEl.textContent='Fill in all fields'; errEl.classList.remove('hidden'); return;
+        }
+
+        try {
+            const res  = await api('/api/auth/register', { method:'POST', body: JSON.stringify({ name, email, password }) });
+            const data = await res.json();
+
+            if (!res.ok) {
+                errEl.textContent = data.message || 'Registration failed';
+                errEl.classList.remove('hidden'); return;
+            }
+
+            toast('Account created! Please sign in.');
+            switchAuth('login');
+        } catch (e) {
+            errEl.textContent = 'Server error'; errEl.classList.remove('hidden');
+        }
+    }
+
+    function logout() {
+        localStorage.clear();
+        token = role = userName = null;
+        showPage('authPage');
+    }
+
+    function initDashboard() {
+        if (role === 'ADMIN' || role === 'SUPER_ADMIN') {
+            showPage('adminPage');
+            document.getElementById('adminGreeting').textContent = 'Hi, ' + userName;
+            loadAdminProducts();
+            loadAdminCategories();
+        } else {
+            showPage('userPage');
+            document.getElementById('userGreeting').textContent = 'Hi, ' + userName;
+            loadProducts();
+            loadCategories();
+        }
+    }
+
+    // ── Products (User) ────────────────────────────────────────────────────────
+
+    async function loadProducts(url = '/api/products') {
+        const res  = await api(url);
+        const data = await res.json();
+        renderProducts(Array.isArray(data) ? data : []);
+    }
+
+    async function loadCategories() {
+        const res  = await api('/api/categories');
+        const cats = await res.json();
+        const sel  = document.getElementById('categoryFilter');
+        sel.innerHTML = '<option value="">All Categories</option>';
+        cats.forEach(c => {
+            const o = document.createElement('option');
+            o.value = c.id; o.textContent = c.name;
+            sel.appendChild(o);
+        });
+    }
+
+    function filterByCategory() {
+        const val = document.getElementById('categoryFilter').value;
+        loadProducts(val ? '/api/products/category/' + val : '/api/products');
+    }
+
+    function searchProducts() {
+        clearTimeout(searchTimer);
+        const q = document.getElementById('searchInput').value.trim();
+        searchTimer = setTimeout(() => {
+            loadProducts(q ? '/api/products/search?name=' + encodeURIComponent(q) : '/api/products');
+        }, 400);
+    }
+
+    function renderProducts(products) {
+        const grid = document.getElementById('productGrid');
+        if (!products.length) {
+            grid.innerHTML = `<div class="col-span-full text-center py-16 text-gray-400">
+                <div class="text-4xl mb-3">📦</div>
+                <p class="font-medium">No products found</p>
+            </div>`;
+            return;
+        }
+        grid.innerHTML = products.map(p => `
+            <div class="card bg-white border border-gray-100 rounded-xl overflow-hidden">
+                <div class="bg-gradient-to-br from-blue-50 to-indigo-50 h-32 flex
+                            items-center justify-center">
+                    <span class="text-4xl">🛍️</span>
+                </div>
+                <div class="p-4">
+                    <div class="flex items-start justify-between gap-2 mb-1">
+                        <h3 class="font-semibold text-gray-900 text-sm leading-tight">
+                            ${p.name}
+                        </h3>
+                        <span class="text-xs text-gray-400 bg-gray-100 px-2 py-0.5
+                                     rounded-full shrink-0">${p.categoryName}</span>
+                    </div>
+                    <p class="text-xs text-gray-500 mb-3 line-clamp-2">${p.description || ''}</p>
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <div class="font-bold text-gray-900">${fmt(p.price)}</div>
+                            <div class="text-xs ${p.quantity > 0 ? 'text-green-600' : 'text-red-500'}">
+                                ${p.quantity > 0 ? p.quantity + ' in stock' : 'Out of stock'}
+                            </div>
+                        </div>
+                        <button onclick="addToCart(${p.id}, '${p.name.replace(/'/g,"\\'")}', ${p.quantity})"
+                            ${p.quantity === 0 ? 'disabled' : ''}
+                            class="btn text-xs font-semibold px-3 py-1.5 rounded-lg
+                                   ${p.quantity > 0
+                                       ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                                       : 'bg-gray-100 text-gray-400 cursor-not-allowed'}">
+                            Add
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    // ── Cart ───────────────────────────────────────────────────────────────────
+
+    async function addToCart(productId, productName, stock) {
+        if (stock === 0) return;
+        const res = await api('/api/cart/items', {
+            method: 'POST',
+            body: JSON.stringify({ productId, quantity: 1 })
+        });
+        if (res.ok) {
+            toast(productName + ' added to cart');
+            updateCartBadge();
+        } else {
+            const d = await res.json();
+            toast(d.message || 'Could not add to cart', 'error');
+        }
+    }
+
+    async function loadCart() {
+        const res  = await api('/api/cart');
+        const cart = await res.json();
+        renderCart(cart);
+    }
+
+    function renderCart(cart) {
+        const items    = cart.items || [];
+        const total    = cart.totalAmount || 0;
+        const totalQty = cart.totalItems  || 0;
+
+        document.getElementById('cartTotal').textContent      = fmt(total);
+        document.getElementById('cartTotalItems').textContent = totalQty + ' items';
+
+        const container = document.getElementById('cartItems');
+        if (!items.length) {
+            container.innerHTML = `<div class="bg-white border border-gray-100 rounded-xl
+                p-12 text-center text-gray-400">
+                <div class="text-4xl mb-3">🛒</div>
+                <p class="font-medium">Your cart is empty</p>
+                <p class="text-sm mt-1">Add some products to get started</p>
+            </div>`;
+            return;
+        }
+        container.innerHTML = items.map(item => `
+            <div class="bg-white border border-gray-100 rounded-xl p-4 mb-3
+                        flex items-center gap-4">
+                <div class="w-14 h-14 bg-blue-50 rounded-lg flex items-center
+                            justify-center text-2xl shrink-0">🛍️</div>
+                <div class="flex-1 min-w-0">
+                    <div class="font-medium text-gray-900 text-sm truncate">
+                        ${item.productName}
+                    </div>
+                    <div class="text-xs text-gray-500 mt-0.5">
+                        ${fmt(item.priceAtAddition)} each
+                    </div>
+                </div>
+                <div class="flex items-center gap-2 shrink-0">
+                    <button class="qty-btn" onclick="updateCartItem(${item.cartItemId}, ${item.quantity - 1})">−</button>
+                    <span class="w-8 text-center text-sm font-medium">${item.quantity}</span>
+                    <button class="qty-btn" onclick="updateCartItem(${item.cartItemId}, ${item.quantity + 1})">+</button>
+                </div>
+                <div class="text-right shrink-0">
+                    <div class="font-semibold text-gray-900 text-sm">${fmt(item.subtotal)}</div>
+                    <button onclick="removeCartItem(${item.cartItemId})"
+                        class="text-xs text-red-400 hover:text-red-600 mt-1">Remove</button>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    async function updateCartItem(cartItemId, quantity) {
+        const res = await api('/api/cart/items/' + cartItemId + '?quantity=' + quantity, { method:'PATCH' });
+        if (res.ok) { const d = await res.json(); renderCart(d); updateCartBadge(); }
+        else { const d = await res.json(); toast(d.message || 'Update failed', 'error'); }
+    }
+
+    async function removeCartItem(cartItemId) {
+        const res = await api('/api/cart/items/' + cartItemId, { method:'DELETE' });
+        if (res.ok) { const d = await res.json(); renderCart(d); updateCartBadge(); }
+    }
+
+    async function clearCart() {
+        if (!confirm('Clear your entire cart?')) return;
+        await api('/api/cart', { method:'DELETE' });
+        loadCart(); updateCartBadge();
+        toast('Cart cleared');
+    }
+
+    async function updateCartBadge() {
+        try {
+            const res  = await api('/api/cart');
+            const cart = await res.json();
+            const badge = document.getElementById('cartBadge');
+            const qty   = cart.totalItems || 0;
+            badge.textContent = qty;
+            badge.classList.toggle('hidden', qty === 0);
+        } catch(e) {}
+    }
+
+    async function loadAddressesForCheckout() {
+        const res  = await api('/api/addresses');
+        const list = await res.json();
+        const sel  = document.getElementById('checkoutAddress');
+        sel.innerHTML = '<option value="">Select delivery address</option>';
+        list.forEach(a => {
+            const o = document.createElement('option');
+            o.value = a.id;
+            o.textContent = a.street + ', ' + a.city + (a.default ? ' (Default)' : '');
+            if (a.default) o.selected = true;
+            sel.appendChild(o);
+        });
+    }
+
+    async function checkout() {
+        const addressId = document.getElementById('checkoutAddress').value;
+        if (!addressId) { toast('Select a delivery address', 'error'); return; }
+
+        const res = await api('/api/orders/checkout', {
+            method: 'POST',
+            body: JSON.stringify({ addressId: parseInt(addressId) })
+        });
+        const data = await res.json();
+
+        if (res.ok) {
+            toast('Order placed successfully! 🎉');
+            switchTab('orders');
+            updateCartBadge();
+        } else {
+            toast(data.message || 'Checkout failed', 'error');
+        }
+    }
+
+    // ── Orders (User) ──────────────────────────────────────────────────────────
+
+    async function loadMyOrders() {
+        const res    = await api('/api/orders');
+        const orders = await res.json();
+        const el     = document.getElementById('ordersList');
+
+        if (!orders.length) {
+            el.innerHTML = `<div class="bg-white border border-gray-100 rounded-xl
+                p-12 text-center text-gray-400">
+                <div class="text-4xl mb-3">📋</div>
+                <p class="font-medium">No orders yet</p>
+            </div>`; return;
+        }
+
+        el.innerHTML = orders.map(o => `
+            <div class="bg-white border border-gray-100 rounded-xl p-5">
+                <div class="flex items-start justify-between mb-4">
+                    <div>
+                        <div class="font-semibold text-gray-900">Order #${o.orderId}</div>
+                        <div class="text-xs text-gray-400 mt-0.5">
+                            ${new Date(o.createdAt).toLocaleDateString('en-IN',
+                                { day:'numeric', month:'short', year:'numeric' })}
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <span class="badge status-${o.status}">${o.status}</span>
+                        ${o.status === 'PENDING' || o.status === 'CONFIRMED'
+                            ? `<button onclick="cancelOrder(${o.orderId})"
+                                   class="btn text-xs text-red-500 hover:bg-red-50 px-2
+                                          py-1 rounded-lg">Cancel</button>`
+                            : ''}
+                    </div>
+                </div>
+                <div class="space-y-2 mb-4">
+                    ${o.items.map(i => `
+                        <div class="flex justify-between text-sm">
+                            <span class="text-gray-600">
+                                ${i.productName} × ${i.quantity}
+                            </span>
+                            <span class="font-medium">${fmt(i.subtotal)}</span>
+                        </div>
+                    `).join('')}
+                </div>
+                <div class="flex justify-between items-center pt-3 border-t border-gray-100">
+                    <div class="text-xs text-gray-500 truncate max-w-xs">
+                        📍 ${o.deliveryAddress}
+                    </div>
+                    <div class="font-bold text-gray-900 shrink-0">${fmt(o.totalAmount)}</div>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    async function cancelOrder(orderId) {
+        if (!confirm('Cancel this order?')) return;
+        const res = await api('/api/orders/' + orderId + '/cancel', { method:'PATCH' });
+        if (res.ok) { toast('Order cancelled. Inventory restored.'); loadMyOrders(); }
+        else { const d = await res.json(); toast(d.message || 'Cannot cancel', 'error'); }
+    }
+
+    // ── Addresses ──────────────────────────────────────────────────────────────
+
+    async function loadAddresses() {
+        const res    = await api('/api/addresses');
+        const list   = await res.json();
+        const el     = document.getElementById('addressList');
+
+        if (!list.length) {
+            el.innerHTML = `<div class="col-span-2 bg-white border border-gray-100
+                rounded-xl p-8 text-center text-gray-400">
+                <p class="font-medium">No addresses saved</p>
+                <p class="text-sm mt-1">Add one to checkout faster</p>
+            </div>`; return;
+        }
+
+        el.innerHTML = list.map(a => `
+            <div class="bg-white border ${a.default ? 'border-blue-200' : 'border-gray-100'}
+                 rounded-xl p-4 relative">
+                ${a.default ? '<span class="absolute top-3 right-3 badge bg-blue-100 text-blue-700">Default</span>' : ''}
+                <div class="text-sm font-medium text-gray-900 mb-1">${a.street}</div>
+                <div class="text-xs text-gray-500">
+                    ${a.city}, ${a.state} ${a.pincode}<br>${a.country}
+                </div>
+                <button onclick="deleteAddress(${a.id})"
+                    class="btn mt-3 text-xs text-red-400 hover:text-red-600">
+                    Remove
+                </button>
+            </div>
+        `).join('');
+    }
+
+    function showAddressForm() { document.getElementById('addressFormCard').classList.remove('hidden'); }
+    function hideAddressForm() { document.getElementById('addressFormCard').classList.add('hidden'); }
+
+    async function saveAddress() {
+        const body = {
+            street:    document.getElementById('addrStreet').value.trim(),
+            city:      document.getElementById('addrCity').value.trim(),
+            state:     document.getElementById('addrState').value.trim(),
+            pincode:   document.getElementById('addrPincode').value.trim(),
+            country:   document.getElementById('addrCountry').value.trim(),
+            isDefault: document.getElementById('addrDefault').checked
+        };
+        if (!body.street || !body.city || !body.state || !body.pincode) {
+            toast('Fill in all address fields', 'error'); return;
+        }
+        const res = await api('/api/addresses', { method:'POST', body: JSON.stringify(body) });
+        if (res.ok) {
+            toast('Address saved');
+            hideAddressForm();
+            loadAddresses();
+            ['addrStreet','addrCity','addrState','addrPincode']
+                .forEach(id => document.getElementById(id).value = '');
+            document.getElementById('addrDefault').checked = false;
+        } else {
+            const d = await res.json();
+            toast(d.message || 'Could not save address', 'error');
+        }
+    }
+
+    async function deleteAddress(id) {
+        if (!confirm('Remove this address?')) return;
+        await api('/api/addresses/' + id, { method:'DELETE' });
+        toast('Address removed');
+        loadAddresses();
+    }
+
+    // ── Admin Products ─────────────────────────────────────────────────────────
+
+    function showAddProductForm()  { document.getElementById('addProductForm').classList.remove('hidden'); }
+    function hideAddProductForm()  { document.getElementById('addProductForm').classList.add('hidden'); }
+
+    async function loadAdminCategories() {
+        const res  = await api('/api/categories');
+        const cats = await res.json();
+        const sel  = document.getElementById('pCategory');
+        if (!sel) return;
+        sel.innerHTML = '<option value="">Select category</option>';
+        cats.forEach(c => {
+            const o = document.createElement('option');
+            o.value = c.id; o.textContent = c.name;
+            sel.appendChild(o);
+        });
+    }
+
+    async function loadAdminProducts() {
+        const res      = await api('/api/admin/products');
+        const products = await res.json();
+        const el       = document.getElementById('adminProductList');
+
+        if (!products.length) {
+            el.innerHTML = `<div class="bg-white border border-gray-100 rounded-xl
+                p-8 text-center text-gray-400">No products yet</div>`; return;
+        }
+
+        el.innerHTML = products.map(p => `
+            <div class="bg-white border border-gray-100 rounded-xl p-4">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 bg-violet-50 rounded-lg flex items-center
+                                justify-center text-xl shrink-0">🛍️</div>
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center gap-2">
+                            <span class="font-semibold text-gray-900 text-sm">${p.name}</span>
+                            <span class="badge ${p.enabled ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}">
+                                ${p.enabled ? 'Active' : 'Disabled'}
+                            </span>
+                            <span class="text-xs text-gray-400">${p.categoryName}</span>
+                        </div>
+                        <div class="flex items-center gap-4 mt-1 text-xs text-gray-500">
+                            <span class="font-medium text-gray-900">${fmt(p.price)}</span>
+                            <span class="${p.quantity > 5 ? 'text-green-600' : p.quantity > 0 ? 'text-yellow-600' : 'text-red-500'}">
+                                ${p.quantity} in stock
+                            </span>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2 shrink-0">
+                        <input type="number" placeholder="New qty" id="qty_${p.id}"
+                            class="w-24 px-2 py-1 border border-gray-200 rounded-lg text-xs"/>
+                        <button onclick="updateInventory(${p.id})"
+                            class="btn text-xs bg-violet-100 hover:bg-violet-200 text-violet-700
+                                   px-3 py-1.5 rounded-lg font-medium">
+                            Update Stock
+                        </button>
+                        <button onclick="toggleProduct(${p.id})"
+                            class="btn text-xs ${p.enabled
+                                ? 'bg-red-50 hover:bg-red-100 text-red-600'
+                                : 'bg-green-50 hover:bg-green-100 text-green-600'}
+                                   px-3 py-1.5 rounded-lg font-medium">
+                            ${p.enabled ? 'Disable' : 'Enable'}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    async function createProduct() {
+        const body = {
+            name:        document.getElementById('pName').value.trim(),
+            description: document.getElementById('pDesc').value.trim(),
+            price:       parseFloat(document.getElementById('pPrice').value),
+            quantity:    parseInt(document.getElementById('pQty').value),
+            categoryId:  parseInt(document.getElementById('pCategory').value)
+        };
+        if (!body.name || !body.price || !body.quantity || !body.categoryId) {
+            toast('Fill in all product fields', 'error'); return;
+        }
+        const res = await api('/api/admin/products', { method:'POST', body: JSON.stringify(body) });
+        if (res.ok) {
+            toast('Product created');
+            hideAddProductForm();
+            loadAdminProducts();
+            ['pName','pDesc','pPrice','pQty'].forEach(id => document.getElementById(id).value = '');
+        } else {
+            const d = await res.json();
+            toast(d.message || 'Create failed', 'error');
+        }
+    }
+
+    async function updateInventory(productId) {
+        const qty = document.getElementById('qty_' + productId).value;
+        if (!qty) { toast('Enter a quantity', 'error'); return; }
+        const res = await api('/api/admin/products/' + productId + '/inventory?quantity=' + qty,
+            { method:'PATCH' });
+        if (res.ok) { toast('Inventory updated'); loadAdminProducts(); }
+        else { const d = await res.json(); toast(d.message || 'Update failed', 'error'); }
+    }
+
+    async function toggleProduct(productId) {
+        const res = await api('/api/admin/products/' + productId + '/toggle', { method:'PATCH' });
+        if (res.ok) { toast('Product status updated'); loadAdminProducts(); }
+    }
+
+    // ── Admin Orders ───────────────────────────────────────────────────────────
+
+    async function loadAdminOrders(status = '') {
+        const url = status
+            ? '/api/super-admin/orders/status/' + status
+            : '/api/super-admin/orders';
+        const res    = await api(url);
+        const orders = await res.json();
+        const el     = document.getElementById('adminOrdersList');
+
+        if (!orders.length) {
+            el.innerHTML = `<div class="bg-white border border-gray-100 rounded-xl
+                p-8 text-center text-gray-400">No orders found</div>`; return;
+        }
+
+        el.innerHTML = orders.map(o => `
+            <div class="bg-white border border-gray-100 rounded-xl p-5">
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <span class="font-semibold text-gray-900">Order #${o.orderId}</span>
+                        <span class="text-xs text-gray-400 ml-2">
+                            ${new Date(o.createdAt).toLocaleDateString('en-IN')}
+                        </span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <span class="badge status-${o.status}">${o.status}</span>
+                        <select onchange="updateOrderStatus(${o.orderId}, this.value)"
+                            class="text-xs border border-gray-200 rounded-lg px-2 py-1">
+                            <option value="">Update status</option>
+                            <option>CONFIRMED</option>
+                            <option>SHIPPED</option>
+                            <option>DELIVERED</option>
+                            <option>CANCELLED</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="space-y-1 mb-3">
+                    ${o.items.map(i => `
+                        <div class="flex justify-between text-sm text-gray-600">
+                            <span>${i.productName} × ${i.quantity}</span>
+                            <span>${fmt(i.subtotal)}</span>
+                        </div>
+                    `).join('')}
+                </div>
+                <div class="flex justify-between pt-3 border-t border-gray-100">
+                    <span class="text-xs text-gray-400 truncate max-w-xs">
+                        📍 ${o.deliveryAddress}
+                    </span>
+                    <span class="font-bold text-gray-900">${fmt(o.totalAmount)}</span>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    async function updateOrderStatus(orderId, status) {
+        if (!status) return;
+        const res = await api('/api/super-admin/orders/' + orderId + '/status?status=' + status,
+            { method:'PATCH' });
+        if (res.ok) { toast('Order status updated'); loadAdminOrders(); }
+        else { const d = await res.json(); toast(d.message || 'Update failed', 'error'); }
+    }
+
+    function filterOrders() {
+        const val = document.getElementById('orderStatusFilter').value;
+        loadAdminOrders(val);
+    }
+
+    // ── Init ───────────────────────────────────────────────────────────────────
+
+    window.onload = () => {
+        if (token && role) initDashboard();
+        else showPage('authPage');
+    };
+</script>
+</body>
+</html>
