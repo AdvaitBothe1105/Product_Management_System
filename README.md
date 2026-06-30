@@ -1,166 +1,335 @@
-5. API runs on `http://localhost:8080`
+# 🛒 ShopEase - Product Management & Order Processing System
 
-### Creating Admin/Super Admin accounts
+A role-based e-commerce backend built using **Spring Boot**, featuring JWT authentication, secure REST APIs, shopping cart management, inventory tracking, and transactional order processing.
 
-Register normally creates a `USER`. To get ADMIN or SUPER_ADMIN access,
-update the role directly in the database after registration:
+---
+
+## 🚀 Tech Stack
+
+- Java 21
+- Spring Boot 3
+- Spring Security
+- JWT Authentication
+- Spring Data JPA (Hibernate)
+- MySQL
+- Maven
+
+---
+
+## ✨ Features
+
+### Authentication & Authorization
+- JWT-based authentication
+- Role-based access control (RBAC)
+- Stateless security
+- BCrypt password encryption
+
+### Customer Features
+- User Registration & Login
+- Browse products
+- Search products
+- Filter products by category
+- Shopping cart management
+- Multiple delivery addresses
+- Checkout
+- View order history
+- Cancel orders
+
+### Admin Features
+- Product CRUD
+- Inventory management
+- Price management
+- Enable/Disable products
+- Assign categories
+
+### Super Admin Features
+- User management
+- Role management
+- Category management
+- View all orders
+- Update order status
+
+---
+
+# 👥 User Roles
+
+| Role | Permissions |
+|------|-------------|
+| USER | Browse products, manage cart, addresses, checkout, view orders |
+| ADMIN | Manage products, inventory and pricing |
+| SUPER_ADMIN | Full system access including user, category and order management |
+
+---
+
+# 🏗 Architecture
+
+```
+Controller
+      │
+      ▼
+Service
+      │
+      ▼
+Repository
+      │
+      ▼
+MySQL Database
+```
+
+Project Structure
+
+```
+src
+├── config
+├── controller
+├── dto
+├── exception
+├── model
+├── repository
+├── security
+└── service
+```
+
+---
+
+# 🗄 Database Schema
+
+```
+users
+roles
+categories
+products
+inventory
+cart
+cart_items
+addresses
+orders
+order_items
+```
+
+### Entity Relationships
+
+```
+User
+ ├── Cart (1:1)
+ ├── Address (1:N)
+ └── Orders (1:N)
+
+Category
+ └── Products (1:N)
+
+Product
+ └── Inventory (1:1)
+
+Order
+ └── OrderItems (1:N)
+
+Cart
+ └── CartItems (1:N)
+```
+
+---
+
+# 🔐 Security
+
+- JWT Authentication
+- Stateless Sessions
+- BCrypt Password Encoding
+- Role-Based Authorization
+- Spring Security Filter Chain
+- Custom JWT Filter
+- Custom UserDetailsService
+
+---
+
+# ⚙️ Setup
+
+## 1. Clone
+
+```bash
+git clone https://github.com/<your-username>/shopease.git
+cd shopease
+```
+
+---
+
+## 2. Create Database
 
 ```sql
-UPDATE users SET role_id = (SELECT id FROM roles WHERE name = 'SUPER_ADMIN')
-WHERE email = 'youremail@example.com';
+CREATE DATABASE shopease_db;
 ```
 
-## API Endpoints
+---
 
-### Auth
-| Method | Endpoint | Access |
-|--------|----------|--------|
-| POST | /api/auth/register | Public |
-| POST | /api/auth/login | Public |
+## 3. Configure
 
-### Categories
-| Method | Endpoint | Access |
-|--------|----------|--------|
-| GET | /api/categories | Authenticated |
-| GET | /api/super-admin/categories | SUPER_ADMIN |
-| POST | /api/super-admin/categories | SUPER_ADMIN |
-| PUT | /api/super-admin/categories/{id} | SUPER_ADMIN |
-| PATCH | /api/super-admin/categories/{id}/toggle | SUPER_ADMIN |
-| DELETE | /api/super-admin/categories/{id} | SUPER_ADMIN |
+Update `application.properties`
 
-### Products
-| Method | Endpoint | Access |
-|--------|----------|--------|
-| GET | /api/products | Authenticated |
-| GET | /api/products/{id} | Authenticated |
-| GET | /api/products/category/{categoryId} | Authenticated |
-| GET | /api/products/search?name= | Authenticated |
-| GET | /api/admin/products | ADMIN, SUPER_ADMIN |
-| POST | /api/admin/products | ADMIN, SUPER_ADMIN |
-| PUT | /api/admin/products/{id} | ADMIN, SUPER_ADMIN |
-| PATCH | /api/admin/products/{id}/price?price= | ADMIN, SUPER_ADMIN |
-| PATCH | /api/admin/products/{id}/inventory?quantity= | ADMIN, SUPER_ADMIN |
-| PATCH | /api/admin/products/{id}/toggle | ADMIN, SUPER_ADMIN |
-| PATCH | /api/admin/products/{id}/category/{categoryId} | ADMIN, SUPER_ADMIN |
+```properties
+spring.datasource.url=
+spring.datasource.username=
+spring.datasource.password=
 
-### Cart
-| Method | Endpoint | Access |
-|--------|----------|--------|
-| GET | /api/cart | USER |
-| POST | /api/cart/items | USER |
-| PATCH | /api/cart/items/{cartItemId}?quantity= | USER |
-| DELETE | /api/cart/items/{cartItemId} | USER |
-| DELETE | /api/cart | USER |
-
-### Addresses
-| Method | Endpoint | Access |
-|--------|----------|--------|
-| GET | /api/addresses | USER |
-| POST | /api/addresses | USER |
-| PUT | /api/addresses/{id} | USER |
-| DELETE | /api/addresses/{id} | USER |
-
-### Orders
-| Method | Endpoint | Access |
-|--------|----------|--------|
-| POST | /api/orders/checkout | USER |
-| GET | /api/orders | USER |
-| GET | /api/orders/{id} | USER |
-| PATCH | /api/orders/{id}/cancel | USER |
-| GET | /api/super-admin/orders | SUPER_ADMIN |
-| GET | /api/super-admin/orders/status/{status} | SUPER_ADMIN |
-| PATCH | /api/super-admin/orders/{id}/status?status= | SUPER_ADMIN |
-
-### User Management
-| Method | Endpoint | Access |
-|--------|----------|--------|
-| GET | /api/super-admin/users | SUPER_ADMIN |
-| PATCH | /api/super-admin/users/{id}/role?role= | SUPER_ADMIN |
-| PATCH | /api/super-admin/users/{id}/toggle | SUPER_ADMIN |
-
-## Sample API Requests
-
-### Register
-```json
-POST /api/auth/register
-{
-    "name": "Advait Bothe",
-    "email": "advait@gmail.com",
-    "password": "123456"
-}
+jwt.secret=
 ```
 
-### Login
-```json
-POST /api/auth/login
-{
-    "email": "advait@gmail.com",
-    "password": "123456"
-}
+---
 
-Response:
-{
-    "token": "eyJhbGci...",
-    "email": "advait@gmail.com",
-    "name": "Advait Bothe",
-    "role": "USER"
-}
+## 4. Run
+
+```bash
+mvn spring-boot:run
 ```
 
-### Create Product (Admin)
-```json
-POST /api/admin/products
-Authorization: Bearer <token>
-{
-    "name": "iPhone 15",
-    "description": "Latest Apple iPhone",
-    "price": 79999,
-    "categoryId": 1,
-    "quantity": 50
-}
+Application starts at
+
+```
+http://localhost:8080
 ```
 
-### Add to Cart
-```json
-POST /api/cart/items
-Authorization: Bearer <token>
-{
-    "productId": 1,
-    "quantity": 2
-}
+---
+
+# 📌 API Overview
+
+## Authentication
+
+| Method | Endpoint |
+|---------|----------|
+| POST | /api/auth/register |
+| POST | /api/auth/login |
+
+---
+
+## Products
+
+| Method | Endpoint |
+|---------|----------|
+| GET | /api/products |
+| GET | /api/products/{id} |
+| GET | /api/products/search |
+| GET | /api/products/category/{id} |
+
+---
+
+## Cart
+
+| Method | Endpoint |
+|---------|----------|
+| GET | /api/cart |
+| POST | /api/cart/items |
+| PATCH | /api/cart/items/{id} |
+| DELETE | /api/cart/items/{id} |
+
+---
+
+## Orders
+
+| Method | Endpoint |
+|---------|----------|
+| POST | /api/orders/checkout |
+| GET | /api/orders |
+| PATCH | /api/orders/{id}/cancel |
+
+---
+
+## Admin
+
+| Method | Endpoint |
+|---------|----------|
+| POST | /api/admin/products |
+| PUT | /api/admin/products/{id} |
+| PATCH | /api/admin/products/{id}/inventory |
+| PATCH | /api/admin/products/{id}/price |
+
+---
+
+## Super Admin
+
+| Method | Endpoint |
+|---------|----------|
+| GET | /api/super-admin/users |
+| PATCH | /api/super-admin/users/{id}/role |
+| GET | /api/super-admin/orders |
+| PATCH | /api/super-admin/orders/{id}/status |
+
+---
+
+# 💡 Design Decisions
+
+### Transactional Checkout
+
+Checkout is executed within a single `@Transactional` block.
+
+If any operation fails:
+
+- Inventory rollback
+- Cart rollback
+- Order rollback
+
+ensuring data consistency.
+
+---
+
+### Price Snapshotting
+
+Order items store the product price at purchase time, preventing later price updates from affecting historical orders.
+
+---
+
+### Inventory Validation
+
+Inventory is validated:
+
+- When adding items to cart
+- Again during checkout
+
+to prevent overselling.
+
+---
+
+### Order Cancellation
+
+Cancelling an order automatically restores reserved inventory.
+
+---
+
+### DTO-Based Architecture
+
+Controllers expose DTOs instead of JPA entities, keeping persistence models isolated from API contracts.
+
+---
+
+# 📷 Screenshots
+
+You can add screenshots here later.
+
+```
+Login Screen
+
+Admin Dashboard
+
+User Dashboard
+
+Order Flow
 ```
 
-### Checkout
-```json
-POST /api/orders/checkout
-Authorization: Bearer <token>
-{
-    "addressId": 1
-}
-```
+---
 
-## Key Design Decisions
+# 🔮 Future Improvements
 
-- **Price snapshotting**: Cart and order items store the product price at
-  the time of addition/order, so later price changes don't retroactively
-  affect existing carts or orders.
+- Redis Caching
+- Docker
+- Kafka Event Notifications
+- Payment Gateway Integration
+- Email Notifications
+- Swagger/OpenAPI Documentation
+- Unit & Integration Testing
+- CI/CD Pipeline
 
-- **Inventory validation**: Stock is checked at both add-to-cart time and
-  again at checkout (double-check pattern) to prevent race conditions
-  between adding to cart and placing the order.
+---
 
-- **Transactional checkout**: The entire checkout flow (order creation,
-  inventory reduction, cart clearing) runs in a single `@Transactional`
-  block — if any step fails, everything rolls back, ensuring inventory
-  is never reduced for a failed order.
+# 👨‍💻 Author
 
-- **Order cancellation restores inventory**: Cancelling a PENDING or
-  CONFIRMED order automatically returns the reserved stock.
+**Advait Bothe**
 
-- **Category-product cascade**: Disabling a category hides its products
-  from user-facing endpoints even if the products themselves are enabled.
-  Deleting a category is blocked if it still has associated products.
-
-## Author
-
-Advait Bothe
+GitHub: https://github.com/AdvaitBothe1105
