@@ -1,0 +1,13 @@
+spring.application.name=interview2
+spring.datasource.url=jdbc:mysql://localhost:3306/your_db
+spring.datasource.username=your_username
+spring.datasource.password=your_password
+
+# JPA
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.show-sql=true
+
+# JWT
+app.jwt.secret=your-base64-encoded-secret
+app.jwt.expiration=86400000
+
