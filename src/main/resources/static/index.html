@@ -388,9 +388,13 @@
                 <div class="nav-tab active" onclick="switchAdminTab('adminProducts')">
                     Products
                 </div>
+                <div class="nav-tab" onclick="switchAdminTab('adminCategories')">
+                    Categories
+                </div>
                 <div class="nav-tab" onclick="switchAdminTab('adminOrders')">
                     All Orders
                 </div>
+                <div class="nav-tab" onclick="switchAdminTab('adminUsers')">Users</div>
             </nav>
 
             <div class="flex items-center gap-3">
@@ -421,45 +425,99 @@
             </div>
 
             <!-- Add product form -->
-            <div id="addProductForm" class="hidden bg-white border border-gray-100
-                                             rounded-xl p-5 mb-5">
-                <h3 class="font-semibold text-gray-900 mb-4">New Product</h3>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div class="sm:col-span-2">
-                        <input id="pName" placeholder="Product name"
-                               class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"/>
-                    </div>
-                    <div class="sm:col-span-2">
-                        <textarea id="pDesc" placeholder="Description" rows="2"
-                                  class="w-full px-3 py-2 border border-gray-200 rounded-lg
-                                   text-sm resize-none"></textarea>
-                    </div>
-                    <input id="pPrice" type="number" placeholder="Price (₹)"
-                           class="px-3 py-2 border border-gray-200 rounded-lg text-sm"/>
-                    <input id="pQty" type="number" placeholder="Initial quantity"
-                           class="px-3 py-2 border border-gray-200 rounded-lg text-sm"/>
-                    <select id="pCategory"
-                            class="sm:col-span-2 px-3 py-2 border border-gray-200
-                               rounded-lg text-sm">
-                        <option value="">Select category</option>
-                    </select>
+            <!-- Add product form — update title and add hidden id field -->
+<div id="addProductForm" class="hidden bg-white border border-gray-100
+                                 rounded-xl p-5 mb-5">
+    <h3 class="font-semibold text-gray-900 mb-4" id="productFormTitle">New Product</h3>
+    <input type="hidden" id="productEditId" value=""/>
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div class="sm:col-span-2">
+            <input id="pName" placeholder="Product name"
+                   class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"/>
+        </div>
+        <div class="sm:col-span-2">
+            <textarea id="pDesc" placeholder="Description" rows="2"
+                      class="w-full px-3 py-2 border border-gray-200 rounded-lg
+                       text-sm resize-none"></textarea>
+        </div>
+        <input id="pPrice" type="number" placeholder="Price (₹)"
+               class="px-3 py-2 border border-gray-200 rounded-lg text-sm"/>
+        <input id="pQty" type="number" placeholder="Quantity"
+               class="px-3 py-2 border border-gray-200 rounded-lg text-sm"/>
+        <select id="pCategory"
+                class="sm:col-span-2 px-3 py-2 border border-gray-200
+                   rounded-lg text-sm">
+            <option value="">Select category</option>
+        </select>
+    </div>
+    <div class="flex gap-2 mt-4">
+        <button onclick="createProduct()" id="productSaveBtn"
+                class="btn bg-violet-600 hover:bg-violet-700 text-white px-4 py-2
+                   rounded-lg text-sm font-semibold">
+            Create Product
+        </button>
+        <button onclick="hideAddProductForm()"
+                class="btn bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2
+                   rounded-lg text-sm font-medium">
+            Cancel
+        </button>
+    </div>
+</div>
+
+            <div id="adminProductList" class="space-y-3"></div>
+        </div>
+        <!-- ADMIN CATEGORIES -->
+        <div id="tab-adminCategories" class="tab-content">
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <h1 class="text-xl font-bold text-gray-900">Category Management</h1>
+                    <p class="text-sm text-gray-500 mt-0.5">Manage product categories</p>
+                </div>
+                <button onclick="showAddCategoryForm()"
+                        class="btn bg-violet-600 hover:bg-violet-700 text-white px-4 py-2
+                   rounded-lg text-sm font-semibold">
+                    + Add Category
+                </button>
+            </div>
+            
+
+            <!-- Add/Edit category form -->
+            <div id="categoryFormCard" class="hidden bg-white border border-gray-100
+                                       rounded-xl p-5 mb-5">
+                <h3 class="font-semibold text-gray-900 mb-4" id="categoryFormTitle">
+                    New Category
+                </h3>
+                <input type="hidden" id="categoryEditId" value=""/>
+                <div class="grid grid-cols-1 gap-3">
+                    <input id="catName" placeholder="Category name"
+                           class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"/>
+                    <textarea id="catDesc" placeholder="Description" rows="2"
+                              class="w-full px-3 py-2 border border-gray-200 rounded-lg
+                         text-sm resize-none"></textarea>
                 </div>
                 <div class="flex gap-2 mt-4">
-                    <button onclick="createProduct()"
+                    <button onclick="saveCategory()" id="categorySaveBtn"
                             class="btn bg-violet-600 hover:bg-violet-700 text-white px-4 py-2
-                               rounded-lg text-sm font-semibold">
-                        Create Product
+                       rounded-lg text-sm font-semibold">
+                        Create Category
                     </button>
-                    <button onclick="hideAddProductForm()"
+                    <button onclick="hideCategoryForm()"
                             class="btn bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2
-                               rounded-lg text-sm font-medium">
+                       rounded-lg text-sm font-medium">
                         Cancel
                     </button>
                 </div>
             </div>
 
-            <div id="adminProductList" class="space-y-3"></div>
+            <div id="adminCategoryList" class="space-y-3"></div>
         </div>
+        <div id="tab-adminUsers" class="tab-content">
+                <div class="mb-6">
+                    <h1 class="text-xl font-bold text-gray-900">User Management</h1>
+                    <p class="text-sm text-gray-500 mt-0.5">Manage users and their roles</p>
+                </div>
+                <div id="adminUserList" class="space-y-3"></div>
+            </div>
 
         <!-- ADMIN ORDERS -->
         <div id="tab-adminOrders" class="tab-content">
@@ -488,8 +546,8 @@
      JAVASCRIPT
 ══════════════════════════════════════════════════════════ -->
 <script>
-    // const BASE = 'http://localhost:8080';
-    const BASE = 'http://127.0.0.1:5500/index.html';
+    const BASE = 'http://localhost:8080';
+<!--    const BASE = 'http://127.0.0.1:5500';-->
     let token = localStorage.getItem('token');
     let role  = localStorage.getItem('role');
     let userName = localStorage.getItem('userName');
@@ -554,7 +612,9 @@
         document.getElementById('tab-' + name).classList.add('active');
 
         if (name === 'adminProducts') loadAdminProducts();
+        if (name === 'adminCategories') loadAdminCategoryList();
         if (name === 'adminOrders')   loadAdminOrders();
+        if (name === 'adminUsers') loadAdminUsers();
     }
 
     function switchAuth(mode) {
@@ -989,7 +1049,34 @@
 
     // ── Admin Products ─────────────────────────────────────────────────────────
 
-    function showAddProductForm()  { document.getElementById('addProductForm').classList.remove('hidden'); }
+    function showAddProductForm() {
+    document.getElementById('productEditId').value = '';
+    document.getElementById('productFormTitle').textContent = 'New Product';
+    document.getElementById('productSaveBtn').textContent = 'Create Product';
+    ['pName','pDesc','pPrice','pQty'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('pCategory').value = '';
+    document.getElementById('addProductForm').classList.remove('hidden');
+}
+function editProduct(p) {
+    document.getElementById('productEditId').value = p.id;
+    document.getElementById('productFormTitle').textContent = 'Edit Product';
+    document.getElementById('productSaveBtn').textContent = 'Update Product';
+    document.getElementById('pName').value  = p.name;
+    document.getElementById('pDesc').value  = p.description || '';
+    document.getElementById('pPrice').value = p.price;
+    document.getElementById('pQty').value   = p.quantity;
+    document.getElementById('addProductForm').classList.remove('hidden');
+
+    // pre-select category — categories must already be loaded in dropdown
+    const sel = document.getElementById('pCategory');
+    [...sel.options].forEach(o => {
+        if (o.textContent === p.categoryName) sel.value = o.value;
+    });
+}
+function hideAddProductForm() {
+    document.getElementById('addProductForm').classList.add('hidden');
+}
+
     function hideAddProductForm()  { document.getElementById('addProductForm').classList.add('hidden'); }
 
     async function loadAdminCategories() {
@@ -1004,80 +1091,277 @@
             sel.appendChild(o);
         });
     }
+    // ── Admin Categories ───────────────────────────────────────────────────────
 
-    async function loadAdminProducts() {
-        const res      = await api('/api/admin/products');
-        const products = await res.json();
-        const el       = document.getElementById('adminProductList');
+function showAddCategoryForm() {
+    document.getElementById('categoryEditId').value = '';
+    document.getElementById('categoryFormTitle').textContent = 'New Category';
+    document.getElementById('categorySaveBtn').textContent = 'Create Category';
+    document.getElementById('catName').value = '';
+    document.getElementById('catDesc').value = '';
+    document.getElementById('categoryFormCard').classList.remove('hidden');
+}
 
-        if (!products.length) {
-            el.innerHTML = `<div class="bg-white border border-gray-100 rounded-xl
-                p-8 text-center text-gray-400">No products yet</div>`; return;
-        }
+function hideCategoryForm() {
+    document.getElementById('categoryFormCard').classList.add('hidden');
+}
 
-        el.innerHTML = products.map(p => `
-            <div class="bg-white border border-gray-100 rounded-xl p-4">
-                <div class="flex items-center gap-4">
-                    <div class="w-12 h-12 bg-violet-50 rounded-lg flex items-center
-                                justify-center text-xl shrink-0">🛍️</div>
-                    <div class="flex-1 min-w-0">
-                        <div class="flex items-center gap-2">
-                            <span class="font-semibold text-gray-900 text-sm">${p.name}</span>
-                            <span class="badge ${p.enabled ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}">
-                                ${p.enabled ? 'Active' : 'Disabled'}
-                            </span>
-                            <span class="text-xs text-gray-400">${p.categoryName}</span>
-                        </div>
-                        <div class="flex items-center gap-4 mt-1 text-xs text-gray-500">
-                            <span class="font-medium text-gray-900">${fmt(p.price)}</span>
-                            <span class="${p.quantity > 5 ? 'text-green-600' : p.quantity > 0 ? 'text-yellow-600' : 'text-red-500'}">
-                                ${p.quantity} in stock
-                            </span>
-                        </div>
+async function loadAdminCategoryList() {
+    const res  = await api('/api/super-admin/categories');
+    const cats = await res.json();
+    const el   = document.getElementById('adminCategoryList');
+
+    if (!cats.length) {
+        el.innerHTML = `<div class="bg-white border border-gray-100 rounded-xl
+            p-8 text-center text-gray-400">No categories yet</div>`;
+        return;
+    }
+
+    el.innerHTML = cats.map(c => `
+        <div class="bg-white border border-gray-100 rounded-xl p-4">
+            <div class="flex items-center gap-4">
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-center gap-2">
+                        <span class="font-semibold text-gray-900 text-sm">${c.name}</span>
+                        <span class="badge ${c.active
+                            ? 'bg-green-100 text-green-700'
+                            : 'bg-gray-100 text-gray-500'}">
+                            ${c.active ? 'Active' : 'Disabled'}
+                        </span>
                     </div>
-                    <div class="flex items-center gap-2 shrink-0">
-                        <input type="number" placeholder="New qty" id="qty_${p.id}"
-                            class="w-24 px-2 py-1 border border-gray-200 rounded-lg text-xs"/>
-                        <button onclick="updateInventory(${p.id})"
-                            class="btn text-xs bg-violet-100 hover:bg-violet-200 text-violet-700
-                                   px-3 py-1.5 rounded-lg font-medium">
-                            Update Stock
-                        </button>
-                        <button onclick="toggleProduct(${p.id})"
-                            class="btn text-xs ${p.enabled
-                                ? 'bg-red-50 hover:bg-red-100 text-red-600'
-                                : 'bg-green-50 hover:bg-green-100 text-green-600'}
-                                   px-3 py-1.5 rounded-lg font-medium">
-                            ${p.enabled ? 'Disable' : 'Enable'}
-                        </button>
+                    <div class="text-xs text-gray-500 mt-1">
+                        ${c.description || 'No description'}
                     </div>
                 </div>
+                <div class="flex items-center gap-2 shrink-0">
+                    <button onclick='editCategory(${JSON.stringify(c)})'
+                        class="btn text-xs bg-blue-50 hover:bg-blue-100 text-blue-600
+                               px-3 py-1.5 rounded-lg font-medium">
+                        Edit
+                    </button>
+                    <button onclick="toggleCategory(${c.id})"
+                        class="btn text-xs ${c.active
+                            ? 'bg-red-50 hover:bg-red-100 text-red-600'
+                            : 'bg-green-50 hover:bg-green-100 text-green-600'}
+                               px-3 py-1.5 rounded-lg font-medium">
+                        ${c.active ? 'Disable' : 'Enable'}
+                    </button>
+                    <button onclick="deleteCategory(${c.id})"
+                        class="btn text-xs bg-gray-100 hover:bg-gray-200 text-gray-600
+                               px-3 py-1.5 rounded-lg font-medium">
+                        Delete
+                    </button>
+                </div>
             </div>
-        `).join('');
+        </div>
+    `).join('');
+}
+
+function editCategory(cat) {
+    document.getElementById('categoryEditId').value = cat.id;
+    document.getElementById('categoryFormTitle').textContent = 'Edit Category';
+    document.getElementById('categorySaveBtn').textContent = 'Update Category';
+    document.getElementById('catName').value = cat.name;
+    document.getElementById('catDesc').value = cat.description || '';
+    document.getElementById('categoryFormCard').classList.remove('hidden');
+}
+
+async function saveCategory() {
+    const id   = document.getElementById('categoryEditId').value;
+    const body = {
+        name: document.getElementById('catName').value.trim(),
+        description: document.getElementById('catDesc').value.trim()
+    };
+
+    if (!body.name) { toast('Category name is required', 'error'); return; }
+
+    const url    = id ? '/api/super-admin/categories/' + id
+                       : '/api/super-admin/categories';
+    const method = id ? 'PUT' : 'POST';
+
+    const res = await api(url, { method, body: JSON.stringify(body) });
+
+    if (res.ok) {
+        toast(id ? 'Category updated' : 'Category created');
+        hideCategoryForm();
+        loadAdminCategoryList();
+        loadAdminCategories();   // refresh the dropdown used in product form
+    } else {
+        const d = await res.json();
+        toast(d.message || 'Save failed', 'error');
+    }
+}
+
+async function toggleCategory(id) {
+    const res = await api('/api/super-admin/categories/' + id + '/toggle',
+        { method: 'PATCH' });
+    if (res.ok) {
+        toast('Category status updated');
+        loadAdminCategoryList();
+    } else {
+        const d = await res.json();
+        toast(d.message || 'Update failed', 'error');
+    }
+}
+
+async function deleteCategory(id) {
+    if (!confirm('Delete this category? This only works if it has no products.')) return;
+    const res = await api('/api/super-admin/categories/' + id, { method: 'DELETE' });
+    if (res.ok) {
+        toast('Category deleted');
+        loadAdminCategoryList();
+        loadAdminCategories();
+    } else {
+        const d = await res.json();
+        toast(d.message || 'Cannot delete category with existing products', 'error');
+    }
+}
+
+async function loadAdminUsers() {
+    const res   = await api('/api/super-admin/users');
+    const users = await res.json();
+    console.log('USERS RESPONSE:', users); 
+    const el    = document.getElementById('adminUserList');
+
+    el.innerHTML = users.map(u => `
+        <div class="bg-white border border-gray-100 rounded-xl p-4 flex items-center gap-4">
+            <div class="flex-1">
+                <div class="flex items-center gap-2">
+                    <span class="font-semibold text-gray-900 text-sm">${u.name}</span>
+                    <span class="badge ${u.enabled ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}">
+                        ${u.enabled ? 'Active' : 'Disabled'}
+                    </span>
+                </div>
+                <div class="text-xs text-gray-500 mt-0.5">${u.email}</div>
+            </div>
+            <select onchange="updateUserRole(${u.id}, this.value)"
+                class="text-xs border border-gray-200 rounded-lg px-2 py-1">
+                <option value="">Change role</option>
+                <option ${u.role==='USER' ? 'selected' : ''}>USER</option>
+                <option ${u.role==='ADMIN' ? 'selected' : ''}>ADMIN</option>
+                <option ${u.role==='SUPER_ADMIN' ? 'selected' : ''}>SUPER_ADMIN</option>
+            </select>
+            <button onclick="toggleUserStatus(${u.id})"
+                class="btn text-xs ${u.enabled
+                    ? 'bg-red-50 hover:bg-red-100 text-red-600'
+                    : 'bg-green-50 hover:bg-green-100 text-green-600'}
+                       px-3 py-1.5 rounded-lg font-medium">
+                ${u.enabled ? 'Disable' : 'Enable'}
+            </button>
+        </div>
+    `).join('');
+}
+
+async function updateUserRole(userId, role) {
+    if (!role) return;
+    const res = await api('/api/super-admin/users/' + userId + '/role?role=' + role,
+        { method: 'PATCH' });
+    if (res.ok) { toast('Role updated'); loadAdminUsers(); }
+    else { const d = await res.json(); toast('Update failed', 'error'); }
+}
+
+async function toggleUserStatus(userId) {
+    const res = await api('/api/super-admin/users/' + userId + '/toggle', { method: 'PATCH' });
+    if (res.ok) { toast('Status updated'); loadAdminUsers(); }
+}
+    async function loadAdminProducts() {
+    const res      = await api('/api/admin/products');
+    const products = await res.json();
+    const el       = document.getElementById('adminProductList');
+
+    if (!products.length) {
+        el.innerHTML = `<div class="bg-white border border-gray-100 rounded-xl
+            p-8 text-center text-gray-400">No products yet</div>`; return;
     }
 
+    el.innerHTML = products.map(p => `
+        <div class="bg-white border border-gray-100 rounded-xl p-4">
+            <div class="flex items-center gap-4">
+                <div class="w-12 h-12 bg-violet-50 rounded-lg flex items-center
+                            justify-center text-xl shrink-0">🛍️</div>
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-center gap-2">
+                        <span class="font-semibold text-gray-900 text-sm">${p.name}</span>
+                        <span class="badge ${p.enabled ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}">
+                            ${p.enabled ? 'Active' : 'Disabled'}
+                        </span>
+                        <span class="text-xs text-gray-400">${p.categoryName}</span>
+                    </div>
+                    <div class="flex items-center gap-4 mt-1 text-xs text-gray-500">
+                        <span class="font-medium text-gray-900">${fmt(p.price)}</span>
+                        <span class="${p.quantity > 5 ? 'text-green-600' : p.quantity > 0 ? 'text-yellow-600' : 'text-red-500'}">
+                            ${p.quantity} in stock
+                        </span>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2 shrink-0 flex-wrap justify-end">
+                    <input type="number" placeholder="New price" id="price_${p.id}"
+                        class="w-24 px-2 py-1 border border-gray-200 rounded-lg text-xs"/>
+                    <button onclick="updatePrice(${p.id})"
+                        class="btn text-xs bg-indigo-100 hover:bg-indigo-200 text-indigo-700
+                               px-3 py-1.5 rounded-lg font-medium">
+                        Update Price
+                    </button>
+                    <input type="number" placeholder="New qty" id="qty_${p.id}"
+                        class="w-24 px-2 py-1 border border-gray-200 rounded-lg text-xs"/>
+                    <button onclick="updateInventory(${p.id})"
+                        class="btn text-xs bg-violet-100 hover:bg-violet-200 text-violet-700
+                               px-3 py-1.5 rounded-lg font-medium">
+                        Update Stock
+                    </button>
+                    <button onclick="editProduct(${JSON.stringify(p).replace(/"/g, '&quot;')})"
+                        class="btn text-xs bg-blue-50 hover:bg-blue-100 text-blue-600
+                               px-3 py-1.5 rounded-lg font-medium">
+                        Edit
+                    </button>
+                    <button onclick="toggleProduct(${p.id})"
+                        class="btn text-xs ${p.enabled
+                            ? 'bg-red-50 hover:bg-red-100 text-red-600'
+                            : 'bg-green-50 hover:bg-green-100 text-green-600'}
+                               px-3 py-1.5 rounded-lg font-medium">
+                        ${p.enabled ? 'Disable' : 'Enable'}
+                    </button>
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+async function updatePrice(productId) {
+    const price = document.getElementById('price_' + productId).value;
+    if (!price || price <= 0) { toast('Enter a valid price', 'error'); return; }
+    const res = await api('/api/admin/products/' + productId + '/price?price=' + price,
+        { method: 'PATCH' });
+    if (res.ok) { toast('Price updated'); loadAdminProducts(); }
+    else { const d = await res.json(); toast(d.message || 'Update failed', 'error'); }
+}
+
     async function createProduct() {
-        const body = {
-            name:        document.getElementById('pName').value.trim(),
-            description: document.getElementById('pDesc').value.trim(),
-            price:       parseFloat(document.getElementById('pPrice').value),
-            quantity:    parseInt(document.getElementById('pQty').value),
-            categoryId:  parseInt(document.getElementById('pCategory').value)
-        };
-        if (!body.name || !body.price || !body.quantity || !body.categoryId) {
-            toast('Fill in all product fields', 'error'); return;
-        }
-        const res = await api('/api/admin/products', { method:'POST', body: JSON.stringify(body) });
-        if (res.ok) {
-            toast('Product created');
-            hideAddProductForm();
-            loadAdminProducts();
-            ['pName','pDesc','pPrice','pQty'].forEach(id => document.getElementById(id).value = '');
-        } else {
-            const d = await res.json();
-            toast(d.message || 'Create failed', 'error');
-        }
+    const editId = document.getElementById('productEditId').value;
+    const body = {
+        name:        document.getElementById('pName').value.trim(),
+        description: document.getElementById('pDesc').value.trim(),
+        price:       parseFloat(document.getElementById('pPrice').value),
+        quantity:    parseInt(document.getElementById('pQty').value),
+        categoryId:  parseInt(document.getElementById('pCategory').value)
+    };
+    if (!body.name || !body.price || !body.quantity || !body.categoryId) {
+        toast('Fill in all product fields', 'error'); return;
     }
+
+    const url    = editId ? '/api/admin/products/' + editId : '/api/admin/products';
+    const method = editId ? 'PUT' : 'POST';
+
+    const res = await api(url, { method, body: JSON.stringify(body) });
+    if (res.ok) {
+        toast(editId ? 'Product updated' : 'Product created');
+        hideAddProductForm();
+        loadAdminProducts();
+    } else {
+        const d = await res.json();
+        toast(d.message || 'Save failed', 'error');
+    }
+}
 
     async function updateInventory(productId) {
         const qty = document.getElementById('qty_' + productId).value;

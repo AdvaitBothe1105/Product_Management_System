@@ -41,6 +41,7 @@ public class ProductService {
     public List<ProductResponse> getAllActiveProducts(){
         return productRepo.findByEnabledTrue()
                 .stream()
+                .filter(p -> p.getCategory().isActive())
                 .map(this::toDto)
                 .toList();
     }

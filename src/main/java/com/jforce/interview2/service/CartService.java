@@ -160,6 +160,7 @@ public class CartService {
         if (quantity <= 0) {
             // if quantity is 0 or less → remove item
             cartItemRepo.delete(item);
+            cartItemRepo.flush();
         } else {
             // validate inventory
             Inventory inventory = inventoryRepo
@@ -197,6 +198,7 @@ public class CartService {
         }
 
         cartItemRepo.delete(item);
+        cartItemRepo.flush();
 
         Cart updatedCart = cartRepo.findById(cart.getId()).orElseThrow();
         return toCartDto(updatedCart);
@@ -211,7 +213,6 @@ public class CartService {
     }
 
     // validate cart before checkout
-    // called internally by OrderService before placing order
     public void validateCart(Cart cart) {
         if (cart.getItems().isEmpty()) {
             throw new RuntimeException(
